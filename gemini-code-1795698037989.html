@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DapurSOP — Homemade Strawberry Thick Yogurt</title>
+  <style>
+    :root {
+      --bg: #fdfcfb;
+      --cream: #faf6f0;
+      --cream-line: #f3eadb;
+      --surface: #ffffff;
+      --ink: #0f172a;
+      --text: #334155;
+      --muted: #475569; /* >= 7:1 contrast on white */
+      --line: #e2e8f0;
+      --berry-50: #fff1f2;
+      --berry-100: #ffe4e6;
+      --berry-400: #fb7185;
+      --berry-600: #e11d48;
+      --berry-700: #be123c;
+      --ok-bg: #ecfdf5;
+      --ok-fg: #047857;
+      --warn-bg: #fffbeb;
+      --warn-fg: #92400e;
+      --warn-line: #fde68a;
+      --sky-bg: #f0f9ff;
+      --sky-fg: #0369a1;
+      --r-xl: 20px;
+      --r-lg: 14px;
+      --r-md: 10px;
+      --r-sm: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    h1, h2, h3, p { margin: 0; }
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--berry-400); outline-offset: 2px; }
+    .hidden { display: none !important; }
+
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--berry-100);
+    }
+    .progress-track { width: 100%; height: 6px; background: var(--berry-100); }
+    .progress-fill { height: 100%; width: 0%; background: var(--berry-600); transition: width 0.25s ease; }
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-mark {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: var(--berry-600); color: #fff;
+      display: grid; place-items: center; font-weight: 800; font-size: 17px;
+    }
+    .brand-title { font-weight: 800; color: var(--ink); font-size: 16px; display: block; line-height: 1.1; }
+    .brand-sub { font-size: 12px; color: var(--muted); display: block; }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600;
+      padding: 4px 10px; border-radius: 999px;
+      color: var(--ok-fg); background: var(--ok-bg);
+      border: 1px solid rgba(4, 120, 87, 0.22);
+    }
+    .status-pill.is-error {
+      color: var(--berry-700); background: var(--berry-50);
+      border-color: rgba(190, 18, 60, 0.28);
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+
+    /* Active incubation sticky mini-bar (only visible while fermenting) */
+    .active-timer-bar {
+      background: var(--berry-700);
+      color: #fff;
+      font-size: 12px;
+      padding: 8px 16px;
+    }
+    .active-timer-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .active-timer-link {
+      color: #fde68a;
+      font-weight: 700;
+      text-decoration: underline;
+      background: none;
+      border: 0;
+      padding: 0;
+    }
+
+    /* Layout & Cards */
+    .main {
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 28px) 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-xl);
+      padding: clamp(16px, 3vw, 24px);
+    }
+    .hero-card { border-color: var(--berry-100); }
+    .row-between { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .badge { padding: 3px 9px; border-radius: var(--r-sm); font-size: 12px; font-weight: 700; }
+    .badge-code { background: var(--berry-50); color: var(--berry-700); }
+    .badge-amber { background: var(--warn-bg); color: var(--warn-fg); }
+    .badge-ok { background: var(--ok-bg); color: var(--ok-fg); }
+    .badge-sky { background: var(--sky-bg); color: var(--sky-fg); }
+
+    .hero-title { font-weight: 800; color: var(--ink); font-size: clamp(22px, 4vw, 28px); line-height: 1.25; margin-top: 10px; }
+    .hero-desc { font-size: 14px; color: var(--muted); margin-top: 8px; }
+    .meta-note { font-size: 12px; font-weight: 600; color: var(--muted); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .metric { background: var(--cream); border-radius: var(--r-lg); padding: 10px 12px; }
+    .metric-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); display: block; }
+    .metric-val { font-weight: 800; font-size: 17px; color: var(--ink); display: block; margin-top: 2px; }
+    .metric-val.berry { color: var(--berry-600); }
+    .metric-val.ok { color: var(--ok-fg); }
+
+    /* Section Headings */
+    .sec-title { font-weight: 800; font-size: clamp(17px, 2.5vw, 19px); color: var(--ink); }
+    .sec-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    /* 3 Switches */
+    .switches {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .switch-box {
+      background: var(--cream);
+      border: 1px solid var(--cream-line);
+      border-radius: var(--r-lg);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .switch-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+    .seg {
+      display: grid;
+      gap: 4px;
+      background: var(--surface);
+      padding: 4px;
+      border-radius: var(--r-md);
+      border: 1px solid var(--line);
+    }
+    .seg-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .seg-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .seg-btn {
+      border: 0; background: transparent; padding: 7px 6px;
+      border-radius: var(--r-sm); font-size: 12px; font-weight: 600; color: var(--muted);
+    }
+    .seg-btn[aria-pressed="true"] { background: var(--berry-600); color: #fff; font-weight: 700; }
+
+    /* Ingredients */
+    .ingredients-box {
+      margin-top: 16px;
+      border-radius: var(--r-lg);
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      padding: 14px;
+    }
+    .lime-toggle {
+      display: inline-flex; align-items: flex-start; gap: 8px;
+      font-size: 12px; font-weight: 600; color: var(--text);
+      cursor: pointer; user-select: none;
+    }
+    .lime-toggle input { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--berry-600); flex-shrink: 0; }
+    .ingredients-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .ing-item {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+    .ing-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px 10px;
+    }
+    .ing-name { font-size: 13.5px; font-weight: 700; color: var(--ink); line-height: 1.35; }
+    .ing-qty {
+      font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: var(--r-sm);
+      background: var(--berry-50); color: var(--berry-700); max-width: 100%;
+    }
+    .ing-note { font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+    /* SOP Phases */
+    .phases { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+    .phase {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-xl);
+      padding: clamp(16px, 3vw, 22px);
+    }
+    .phase.is-complete { background: #f8fafc; }
+    .phase.is-active {
+      border-color: var(--berry-400);
+      box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.1);
+    }
+    .pill {
+      padding: 3px 9px; border-radius: var(--r-sm);
+      font-size: 12px; font-weight: 800; background: #f1f5f9; color: var(--muted);
+    }
+    .pill.is-complete { background: #d1fae5; color: var(--ok-fg); }
+    .pill.is-active { background: var(--berry-600); color: #fff; }
+    .now-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--berry-700); margin-left: 6px; }
+    .phase-title { font-weight: 800; font-size: 16px; color: var(--ink); margin-top: 8px; }
+    .phase.is-complete .phase-title { color: var(--muted); }
+
+    .ccp {
+      margin-top: 10px; padding: 10px 12px; border-radius: var(--r-md);
+      background: var(--warn-bg); border: 1px solid var(--warn-line);
+      color: var(--warn-fg); font-size: 12px; font-weight: 600;
+    }
+
+    .tasks { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .task {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px; border-radius: var(--r-lg);
+      border: 1px solid var(--line); background: #fdfbf7;
+      cursor: pointer; user-select: none;
+    }
+    .task:hover { background: var(--cream); }
+    .task.is-checked { background: #f8fafc; border-color: transparent; }
+    .task input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--berry-600); flex-shrink: 0; }
+    .task-text { font-size: 14px; color: var(--text); }
+    .task input:checked + .task-text { text-decoration: line-through; color: var(--muted); }
+
+    /* Embedded Incubation Timer inside Tahap 4 */
+    .timer-box {
+      margin-top: 14px;
+      background: linear-gradient(135deg, var(--berry-600), var(--berry-700));
+      color: #fff;
+      border-radius: var(--r-lg);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .timer-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+    .timer-title { font-weight: 800; font-size: 15px; }
+    .timer-sub { font-size: 12px; color: var(--berry-100); margin-top: 2px; }
+    .elapsed-tag {
+      display: inline-block; margin-bottom: 4px;
+      padding: 2px 8px; border-radius: 6px;
+      background: #fcd34d; color: var(--ink);
+      font-size: 11px; font-weight: 800;
+    }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn {
+      border: 0; border-radius: var(--r-md); padding: 8px 14px;
+      font-size: 12px; font-weight: 700;
+    }
+    .btn-white { background: #fff; color: var(--berry-700); }
+    .btn-white:hover { background: var(--berry-50); }
+    .btn-ghost { background: rgba(255, 255, 255, 0.18); color: #fff; }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.28); }
+    .btn-amber { background: #fcd34d; color: var(--ink); }
+    .btn-amber:hover { background: #fde68a; }
+    .btn-outline { background: var(--surface); border: 1px solid var(--line); color: var(--text); }
+    .btn-outline:hover { background: var(--berry-50); border-color: var(--berry-400); color: var(--berry-700); }
+    .btn-danger { background: var(--berry-600); color: #fff; }
+    .btn-danger:hover { background: var(--berry-700); }
+
+    .slots { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .slot { background: rgba(255, 255, 255, 0.14); border-radius: var(--r-md); padding: 10px; }
+    .slot.hi { background: rgba(255, 255, 255, 0.22); border: 1px solid rgba(255, 255, 255, 0.35); }
+    .slot-lbl { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--berry-100); display: block; }
+    .slot.hi .slot-lbl { color: #fde68a; }
+    .slot-val { font-size: 14px; font-weight: 800; display: block; margin-top: 2px; }
+
+    /* QC Table */
+    .table-wrap { overflow-x: auto; margin-top: 12px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th, td { padding: 10px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    th { border-bottom-color: var(--line); color: var(--muted); font-weight: 700; }
+    th:first-child, td:first-child { padding-left: 0; font-weight: 700; color: var(--ink); }
+    th:last-child, td:last-child { padding-right: 0; color: var(--berry-700); }
+    th.col-pass { color: var(--ok-fg); }
+
+    /* Native Dialog */
+    dialog {
+      border: 1px solid var(--line);
+      border-radius: var(--r-xl);
+      padding: 22px;
+      max-width: 380px;
+      width: calc(100% - 32px);
+      box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.2);
+    }
+    dialog::backdrop { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(3px); }
+    .dialog-desc { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+    .footer {
+      max-width: 860px; width: 100%; margin: 20px auto 0;
+      padding: 20px 16px; text-align: center; font-size: 12px;
+      color: var(--muted); border-top: 1px solid var(--line);
+    }
+
+    /* Responsive Desktop Breakpoints (prevents 3+1 orphan & badge overflow) */
+    @media (min-width: 640px) {
+      .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .ingredients-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ing-item:last-child:nth-child(odd) { grid-column: 1 / -1; }
+      .slots { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (min-width: 720px) {
+      .switches { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="progress-track" role="progressbar" aria-label="Progres SOP" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-role">
+      <div id="top-progress-bar" class="progress-fill"></div>
+    </div>
+
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div>
+          <span class="brand-title">DapurSOP</span>
+          <span class="brand-sub">Catatan Resep Dapur</span>
+        </div>
+      </div>
+
+      <span id="save-status" class="status-pill" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="save-status-text">Tersimpan</span>
+      </span>
+    </div>
+
+    <!-- Appears only when incubation timer is running -->
+    <div id="active-timer-bar" class="active-timer-bar hidden" aria-live="polite">
+      <div class="active-timer-inner">
+        <span id="active-timer-summary">Fermentasi berjalan...</span>
+        <button type="button" id="btn-jump-timer" class="active-timer-link">Ke Tahap 4 ↓</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- HERO -->
+    <section class="card hero-card">
+      <div class="row-between">
+        <div id="recipe-badges" class="badges"></div>
+        <span class="meta-note">Tahan 7–10 hari di kulkas</span>
+      </div>
+
+      <h1 class="hero-title">Homemade Strawberry Thick Yogurt</h1>
+      <p class="hero-desc">
+        Yogurt kental <em>creamy</em> ala Cimory Squeeze dan Greek yogurt tanpa susu bubuk. Selai stroberi dimasak terpisah lalu diaduk per porsi saat mau dimakan supaya rasanya tidak terlalu asam-manis dan yogurt tidak cepat encer.
+      </p>
+
+      <div class="metrics">
+        <div class="metric">
+          <span class="metric-label">Takaran Susu</span>
+          <span id="metric-volume" class="metric-val">300 ml</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Perkiraan Jadi</span>
+          <span id="metric-yield" class="metric-val berry">±160–190 g</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Kerja Dapur</span>
+          <span class="metric-val">±20 Menit</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Progres</span>
+          <span id="metric-progress" class="metric-val ok">0% Selesai</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. SETELAN DAPUR & BAHAN -->
+    <section class="card">
+      <h2 class="sec-title">1. Setelan Dapur &amp; Takaran Bahan</h2>
+      <p class="sec-sub">Pilih volume susu dan alat yang ada; takaran dan cara cek suhu di bawah langsung ikut berubah.</p>
+
+      <div class="switches">
+        <div class="switch-box">
+          <span class="switch-label" id="lbl-vol">1. Ukuran Batch Susu</span>
+          <div class="seg seg-3" role="group" aria-labelledby="lbl-vol">
+            <button type="button" data-vol="300" class="seg-btn vol-btn" aria-pressed="true">300 ml</button>
+            <button type="button" data-vol="500" class="seg-btn vol-btn" aria-pressed="false">500 ml</button>
+            <button type="button" data-vol="1000" class="seg-btn vol-btn" aria-pressed="false">1000 ml</button>
+          </div>
+        </div>
+
+        <div class="switch-box">
+          <span class="switch-label" id="lbl-thermo">2. Termometer Makanan</span>
+          <div class="seg seg-2" role="group" aria-labelledby="lbl-thermo">
+            <button type="button" data-thermo="false" class="seg-btn thermo-btn" aria-pressed="true">Tes Jari</button>
+            <button type="button" data-thermo="true" class="seg-btn thermo-btn" aria-pressed="false">Ada Termometer</button>
+          </div>
+        </div>
+
+        <div class="switch-box">
+          <span class="switch-label" id="lbl-sugar">3. Gula Selai Stroberi</span>
+          <div class="seg seg-2" role="group" aria-labelledby="lbl-sugar">
+            <button type="button" data-sugar="less" class="seg-btn sugar-btn" aria-pressed="true">Less Sugar</button>
+            <button type="button" data-sugar="zero" class="seg-btn sugar-btn" aria-pressed="false">0% No Sugar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ingredients-box">
+        <div class="row-between">
+          <span class="switch-label">Bahan yang Dipakai</span>
+          <label class="lime-toggle">
+            <input type="checkbox" id="toggle-lime" />
+            <span>Pakai Jeruk Nipis/Lemon (opsional, biar warna merah selai tetap cerah)</span>
+          </label>
+        </div>
+        <div id="ingredients-grid" class="ingredients-grid"></div>
+      </div>
+    </section>
+
+    <!-- 2. LANGKAH KERJA SOP (Timer Inkubasi menyatu di Tahap 4) -->
+    <section>
+      <div class="row-between">
+        <div>
+          <h2 class="sec-title">2. Urutan Pengerjaan (Centang Tiap Langkah)</h2>
+          <p class="sec-sub">Tahap yang sedang jalan ditandai merah muda supaya tidak kelewat atau kedobel.</p>
+        </div>
+        <button type="button" id="btn-open-reset" class="btn btn-outline">Reset / Batch Baru</button>
+      </div>
+
+      <div id="sop-phases" class="phases"></div>
+    </section>
+
+    <!-- 3. QUALITY CONTROL -->
+    <section class="card">
+      <h2 class="sec-title">3. Cek Hasil Sebelum Dimakan</h2>
+      <p class="sec-sub">Cocokkan warna, bau, dan kekentalan yogurt sebelum masuk kulkas atau dimakan:</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cek</th>
+              <th class="col-pass">Aman &amp; Jadi</th>
+              <th>Gagal (Buang Saja)</th>
+            </tr>
+          </thead>
+          <tbody id="qc-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    DapurSOP • Progres dan setelan tersimpan otomatis di browser perangkat ini (<code>localStorage</code>).
+  </footer>
+
+  <!-- Native accessible dialog (Esc, backdrop, focus management built-in) -->
+  <dialog id="reset-dialog" aria-labelledby="reset-dialog-title">
+    <h3 id="reset-dialog-title" class="sec-title">Mulai Batch Baru?</h3>
+    <p class="dialog-desc">
+      Semua centang langkah dan jam fermentasi akan kembali ke 0%. Setelan 3 tombol di atas tetap tersimpan.
+    </p>
+    <div class="dialog-actions">
+      <button type="button" id="btn-cancel-reset" class="btn btn-outline">Batal</button>
+      <button type="button" id="btn-confirm-reset" class="btn btn-danger">Ya, Reset Progres</button>
+    </div>
+  </dialog>
+
+  <script>
+    // shortcut: single-recipe object instead of multi-recipe registry; convert to array when a 2nd recipe is added
+    const RECIPE = {
+      title: 'Homemade Strawberry Thick Yogurt',
+      scales: {
+        300: {
+          milk: '300 ml (⅓ Kotak)', restMilk: '700 ml', yield: '±160–190 g',
+          starter: '1 sdm penuh (±12–15 g)', warmMilk: '2 sdm',
+          heat: '±3–4 Menit', cool: '±8–10 Menit', jar: '350–500 ml',
+          berry: '½ – 1 mika (±80–150 g)', sugar: '2–3 sdt (±8–12 g)',
+          water: '1–1,5 sdm', lime: '½ sdt', compoteTotal: '2,5–3 sdm'
+        },
+        500: {
+          milk: '500 ml (½ Kotak)', restMilk: '500 ml', yield: '±275–325 g',
+          starter: '1,5 sdm penuh (±20–25 g)', warmMilk: '2–3 sdm',
+          heat: '±4–5 Menit', cool: '±10–12 Menit', jar: '500–650 ml',
+          berry: '1 mika (±150–180 g)', sugar: '1–1,5 sdm (±15–20 g)',
+          water: '2 sdm', lime: '1 sdt', compoteTotal: '4–5 sdm'
+        },
+        1000: {
+          milk: '1.000 ml (1 Kotak Penuh)', restMilk: '0 ml', yield: '±550–650 g',
+          starter: '3 sdm penuh (±45 g)', warmMilk: '4–5 sdm',
+          heat: '±8–10 Menit', cool: '±15–20 Menit', jar: '1,2–1,5 Liter',
+          berry: '1,5–2 mika (±250–300 g)', sugar: '2–2,5 sdm (±25–30 g)',
+          water: '3 sdm', lime: '1,5 sdt', compoteTotal: '8–10 sdm'
+        }
+      },
+      ingredients(q, cfg) {
+        const list = [
+          { name: 'Greenfields Fresh Milk (Full Cream)', qty: q.milk, note: 'Susu segar pasteurisasi (bukan Low Fat/Skim)' },
+          { name: 'Bibit Yogurt Plain (Biokul / Greenfields)', qty: q.starter, note: 'Keluarkan dari kulkas 15 menit sebelumnya biar suhu ruang' },
+          { name: 'Buah Stroberi Segar', qty: q.berry, note: 'Cuci bersih, buang daunnya, potong dadu kecil (±0,5 cm)' },
+          {
+            name: 'Gula Pasir (Untuk Selai Stroberi)',
+            qty: cfg.sugarMode === 'less' ? q.sugar : '0 g (0% Gula)',
+            note: cfg.sugarMode === 'less' ? 'Mengimbangi rasa asam stroberi dan membantu selai mengental' : 'Dimasak tanpa gula tambahan'
+          }
+        ];
+        if (cfg.useLime) {
+          list.push({ name: 'Air Jeruk Nipis / Lemon', qty: q.lime, note: 'Biar warna merah selai tidak cepat pucat' });
+        }
+        return list;
+      },
+      phases(q, cfg) {
+        return [
+          {
+            id: 'p0', badge: 'Tahap 0', title: 'Cuci Alat & Simpan Sisa Susu', meta: '±3 Menit • Bebas Minyak',
+            tasks: [
+              { id: 't0-1', text: 'Cuci panci kecil, sendok/spatula, mangkuk kecil, dan wadah fermentasi pakai sabun sampai kesat dan bebas minyak.' },
+              { id: 't0-2', text: 'Siram semua alat tadi dengan air mendidih 10–15 detik, lalu tiriskan sampai kering (jangan dilap lap dapur biasa).' },
+              {
+                id: 't0-3',
+                text: cfg.volume < 1000
+                  ? `Tuang ${cfg.volume} ml susu ke gelas ukur atau panci tanpa minum langsung dari mulut kotak. Tutup rapat sisa ${q.restMilk} dan taruh di rak dalam kulkas (tahan 3–4 hari).`
+                  : 'Siapkan 1 kotak penuh Greenfields Fresh Milk (1.000 ml) untuk langsung dipakai semuanya.'
+              }
+            ]
+          },
+          {
+            id: 'p1', badge: 'Tahap 1', title: 'Panaskan Susu', meta: `${q.heat} • 80°C – 85°C`,
+            ccp: 'Wajib: Pakai api kecil dan JANGAN biarkan susu mendidih meluap.',
+            tasks: [
+              { id: 't1-1', text: `Tuang ${q.milk} murni (tanpa susu bubuk) ke panci kecil bersih, nyalakan api kecil.` },
+              {
+                id: 't1-2',
+                text: cfg.hasThermometer
+                  ? 'Aduk pelan sesekali supaya dasar panci tidak gosong sampai termometer menunjukkan 80°C–85°C, lalu matikan api.'
+                  : 'Aduk pelan sesekali supaya dasar panci tidak gosong sampai muncul gelembung kecil di pinggir panci dan uap mulai mengepul (80°C–85°C), lalu matikan api.'
+              }
+            ]
+          },
+          {
+            id: 'p2', badge: 'Tahap 2', title: 'Dinginkan Susu Sampai Hangat Kuku', meta: `${q.cool} • 40°C – 43°C`,
+            ccp: 'Wajib: Suhu di atas 45°C bikin bakteri bibit mati dan yogurt gagal kental.',
+            tasks: [
+              { id: 't2-1', text: 'Diamkan panci di suhu ruang (bagian bawah panci boleh direndam di baskom air biasa supaya cepat turun).' },
+              {
+                id: 't2-2',
+                text: cfg.hasThermometer
+                  ? 'Pantau termometer sampai suhunya turun di kisaran 40°C–43°C.'
+                  : 'Tes Jari Kelingking: Cuci bersih ujung jari kelingking dan bilas air matang, lalu celupkan ke susu. Kalau terasa hangat nyaman dan jari kuat ditahan 10 detik tanpa perih, suhunya pas.'
+              }
+            ]
+          },
+          {
+            id: 'p3', badge: 'Tahap 3', title: 'Campur Bibit Yogurt', meta: '±2 Menit • Suhu Hangat',
+            tasks: [
+              { id: 't3-1', text: `Taruh ${q.starter} bibit yogurt plain suhu ruang di mangkuk kecil, beri ${q.warmMilk} susu hangat dari panci, lalu aduk sampai encer dan tidak menggumpal.` },
+              { id: 't3-2', text: 'Tuang campuran bibit ke panci utama, aduk pelan sekitar 20 detik sampai rata (jangan dikocok kencang supaya tidak berbusa).' }
+            ]
+          },
+          {
+            id: 'p4', badge: 'Tahap 4', title: 'Diamkan / Fermentasi Hangat', meta: '10 – 12 Jam • Jangan Digoyang',
+            ccp: 'Wajib: JANGAN digeser, dibuka, atau diguncang selama fermentasi supaya gumpalannya tidak pecah.',
+            hasTimer: true,
+            tasks: [
+              { id: 't4-1', text: `Tuang susu ke wadah fermentasi bersih ukuran ${q.jar}, tutup rapat, lalu bungkus seluruh wadah dengan handuk atau kain tebal.` },
+              { id: 't4-2', text: 'Taruh di tempat hangat yang tenang (dalam lemari dapur tertutup, oven mati berlampu, atau dekat rice cooker), lalu klik "Mulai Inkubasi" di bawah dan pasang alarm HP.' },
+              { id: 't4-3', text: 'Diamkan 10 jam (asam ringan) sampai 12 jam (lebih asam dan memadat seperti puding lembut).' }
+            ]
+          },
+          {
+            id: 'p5', badge: 'Tahap 5', title: 'Masak Selai Stroberi (Terpisah)', meta: '±7 Menit • Dikerjakan Sambil Menunggu',
+            ccp: 'Wajib: Selai HARUS dingin total sebelum kena yogurt supaya bakteri baiknya tidak mati.',
+            tasks: [
+              { id: 't5-1', text: `Potong dadu kecil (±0,5 cm) ${q.berry} stroberi yang sudah dicuci dan dibuang daunnya.` },
+              {
+                id: 't5-2',
+                text: cfg.sugarMode === 'less'
+                  ? `Masak stroberi dengan ${q.sugar} gula pasir dan ${q.water} air matang pakai api kecil selama 5–7 menit sambil ditekan pelan sampai mengental.`
+                  : `Masak stroberi dengan ${q.water} air matang (0% tanpa gula) pakai api kecil selama 5–7 menit sambil ditekan pelan sampai mengental.`
+              },
+              {
+                id: 't5-3',
+                text: cfg.useLime
+                  ? `Matikan api, beri ${q.lime} air jeruk nipis/lemon biar warna merahnya tetap cerah, pindahkan ke wadah bersih, lalu dinginkan total di kulkas.`
+                  : 'Matikan api, pindahkan selai ke wadah bersih tertutup, lalu dinginkan total di suhu ruang atau kulkas.'
+              }
+            ]
+          },
+          {
+            id: 'p6', badge: 'Tahap 6', title: 'Saring di Kulkas Biar Kental', meta: '2 – 4 Jam • Di Dalam Kulkas',
+            tasks: [
+              { id: 't6-1', text: 'Taruh saringan di atas mangkuk penampung, lapisi kain saring tipis bersih (kain tahu atau katun tipis), lalu tuang yogurt yang sudah memadat.' },
+              { id: 't6-2', text: 'Lipat kain menutup permukaan yogurt, masukkan ke kulkas 2 jam (kental ala Cimory Squeeze) sampai 4 jam (padat ala Greek yogurt). Pisahkan air kuning bening (whey) di bawah.' }
+            ]
+          },
+          {
+            id: 'p7', badge: 'Tahap 7', title: 'Simpan & Cara Menyajikan', meta: '±2 Menit • Awet 7–10 Hari',
+            tasks: [
+              { id: 't7-1', text: `Pindahkan yogurt kental ke wadah bersih kedap udara, aduk pelan 10 detik sampai halus. Sisihkan ${q.starter} yogurt plain murni di wadah kecil terpisah untuk bibit batch berikutnya (pakai maksimal 5 hari).` },
+              { id: 't7-2', text: `Simpan yogurt plain dan selai stroberi TERPISAH di kulkas. Saat mau makan, ambil 1 porsi (±100 g / 3 sdm yogurt) lalu aduk dengan 1 sdt–1 sdm selai (total pas untuk batch ini ±${q.compoteTotal} selai).` }
+            ]
+          }
+        ];
+      },
+      qc: [
+        { param: 'Warna', pass: 'Putih bersih sampai putih gading rata; selai merah cerah alami.', fail: 'Ada bercak hijau, hitam, oranye, atau merah muda liar.' },
+        { param: 'Bau', pass: 'Asam segar khas yogurt bercampur wangi stroberi.', fail: 'Bau busuk, tengik, atau bau ragi/alkohol menyengat.' },
+        { param: 'Tekstur', pass: 'Seperti puding lembut sebelum disaring; pekat creamy setelah disaring.', fail: 'Tetap cair encer setelah 12 jam atau berlendir panjang.' }
+      ]
+    };
+
+    const STORAGE_KEY = 'dapur_sop_v3';
+    const VALID_VOLUMES = [300, 500, 1000];
+
+    const DEFAULT_STATE = () => ({
+      volume: 300,
+      hasThermometer: false,
+      sugarMode: 'less',
+      useLime: false,
+      completedTasks: {},
+      incubationStart: null
+    });
+
+    function sanitizeState(raw) {
+      const base = DEFAULT_STATE();
+      if (!raw || typeof raw !== 'object') return base;
+      const vol = Number(raw.volume);
+      base.volume = VALID_VOLUMES.includes(vol) ? vol : 300;
+      base.hasThermometer = Boolean(raw.hasThermometer);
+      base.sugarMode = raw.sugarMode === 'zero' ? 'zero' : 'less';
+      base.useLime = Boolean(raw.useLime);
+      if (raw.completedTasks && typeof raw.completedTasks === 'object' && !Array.isArray(raw.completedTasks)) {
+        for (const [k, v] of Object.entries(raw.completedTasks)) {
+          if (v === true) base.completedTasks[k] = true;
+        }
+      }
+      if (typeof raw.incubationStart === 'string' && !Number.isNaN(Date.parse(raw.incubationStart))) {
+        base.incubationStart = raw.incubationStart;
+      }
+      return base;
+    }
+
+    function setStorageStatus(ok, msg) {
+      const pill = document.getElementById('save-status');
+      const txt = document.getElementById('save-status-text');
+      if (!pill || !txt) return;
+      pill.classList.toggle('is-error', !ok);
+      txt.textContent = msg;
+    }
+
+    let state = DEFAULT_STATE();
+
+    function loadState() {
+      try {
+        // Migrate progress from v2 seamlessly so existing users do not lose data
+        const v3 = localStorage.getItem(STORAGE_KEY);
+        if (v3) return sanitizeState(JSON.parse(v3));
+        const v2 = localStorage.getItem('dapur_sop_v2');
+        if (v2) {
+          const old = JSON.parse(v2);
+          const oldProg = old?.progressByRecipe?.['strawberry-yogurt'] || {};
+          return sanitizeState({
+            volume: old.volume,
+            hasThermometer: old.hasThermometer,
+            sugarMode: old.sugarMode,
+            useLime: old.useLime,
+            completedTasks: oldProg.completedTasks,
+            incubationStart: oldProg.incubationStart
+          });
+        }
+        return DEFAULT_STATE();
+      } catch {
+        setStorageStatus(false, 'Penyimpanan lokal nonaktif');
+        return DEFAULT_STATE();
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        setStorageStatus(true, 'Tersimpan');
+      } catch {
+        setStorageStatus(false, 'Gagal simpan (mode privat/penuh)');
+      }
+    }
+
+    function esc(str) {
+      return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function formatLocalTime(d) {
+      return new Intl.DateTimeFormat('id-ID', {
+        weekday: 'short', hour: '2-digit', minute: '2-digit', timeZoneName: 'short', hour12: false
+      }).format(d);
+    }
+
+    function getElapsedInfo(startDate) {
+      const diffMins = Math.max(0, Math.floor((Date.now() - startDate.getTime()) / 60000));
+      const h = Math.floor(diffMins / 60);
+      const m = diffMins % 60;
+      const label = `${h}j ${m}m`;
+      if (diffMins >= 720) return { label, status: `Sudah 12 jam (${label}) — segera angkat & saring!` };
+      if (diffMins >= 600) return { label, status: `Bisa diangkat mild (${label}) — padat ideal di 12 jam` };
+      return { label, status: `Sudah berjalan: ${label}` };
+    }
+
+    function renderTimerMarkup() {
+      if (!state.incubationStart) {
+        return `
+          <div class="timer-box" id="incubation-timer-box">
+            <div class="timer-head">
+              <div>
+                <div class="timer-title">Catat Jam Fermentasi (10–12 Jam)</div>
+                <div class="timer-sub">Klik setelah wadah dibungkus handuk untuk hitung jam angkat &amp; pasang alarm HP.</div>
+              </div>
+              <button type="button" class="btn btn-white" data-action="start-timer">Mulai Inkubasi Sekarang</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const start = new Date(state.incubationStart);
+      const t10 = new Date(start.getTime() + 10 * 3600000);
+      const t12 = new Date(start.getTime() + 12 * 3600000);
+      const elapsed = getElapsedInfo(start);
+
+      return `
+        <div class="timer-box" id="incubation-timer-box">
+          <div class="timer-head">
+            <div>
+              <span class="elapsed-tag" id="timer-elapsed-tag">${esc(elapsed.status)}</span>
+              <div class="timer-title">Fermentasi Sedang Jalan</div>
+              <div class="timer-sub">Jangan buka atau guncang wadah sampai jam angkat tiba.</div>
+            </div>
+            <div class="btn-row">
+              <button type="button" class="btn btn-white" data-action="start-timer">Ulangi Jam</button>
+              <button type="button" class="btn btn-ghost" data-action="clear-timer">Hapus Jam</button>
+            </div>
+          </div>
+
+          <div class="slots">
+            <div class="slot"><span class="slot-lbl">Mulai</span><span class="slot-val">${esc(formatLocalTime(start))}</span></div>
+            <div class="slot"><span class="slot-lbl">Angkat Mild (10 Jam)</span><span class="slot-val">${esc(formatLocalTime(t10))}</span></div>
+            <div class="slot hi"><span class="slot-lbl">Angkat Padat (12 Jam)</span><span class="slot-val">${esc(formatLocalTime(t12))}</span></div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-amber" data-action="download-ics">+ Pasang Alarm HP (.ics)</button>
+            <button type="button" class="btn btn-ghost" data-action="copy-timer" id="btn-copy-timer">Salin Jam</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateActiveTimerBar() {
+      const bar = document.getElementById('active-timer-bar');
+      const summary = document.getElementById('active-timer-summary');
+      if (!state.incubationStart) {
+        bar.classList.add('hidden');
+        return;
+      }
+      const start = new Date(state.incubationStart);
+      const t12 = new Date(start.getTime() + 12 * 3600000);
+      const elapsed = getElapsedInfo(start);
+      summary.textContent = `Fermentasi: ${elapsed.status} • Target 12 jam: ${formatLocalTime(t12)}`;
+      bar.classList.remove('hidden');
+
+      const tag = document.getElementById('timer-elapsed-tag');
+      if (tag) tag.textContent = elapsed.status;
+    }
+
+    function renderPhases(preserveFocusId = null) {
+      const q = RECIPE.scales[state.volume];
+      const phases = RECIPE.phases(q, state);
+
+      let total = 0, done = 0, activeFound = false;
+      for (const p of phases) {
+        for (const t of p.tasks) {
+          total++;
+          if (state.completedTasks[t.id]) done++;
+        }
+      }
+
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById('top-progress-bar').style.width = `${pct}%`;
+      document.getElementById('progress-role').setAttribute('aria-valuenow', String(pct));
+      document.getElementById('metric-progress').textContent = `${pct}% Selesai`;
+
+      const container = document.getElementById('sop-phases');
+      container.innerHTML = phases.map(p => {
+        const isDone = p.tasks.every(t => state.completedTasks[t.id]);
+        const isActive = !isDone && !activeFound;
+        if (isActive) activeFound = true;
+
+        const cls = isDone ? 'is-complete' : isActive ? 'is-active' : '';
+        return `
+          <article class="phase ${cls}" id="${p.id}">
+            <div class="row-between">
+              <div>
+                <span class="pill ${cls}">${isDone ? '✓ ' + esc(p.badge) : esc(p.badge)}</span>
+                ${isActive ? '<span class="now-tag">• Tahap Sekarang</span>' : ''}
+              </div>
+              <span class="meta-note">${esc(p.meta)}</span>
+            </div>
+            <h3 class="phase-title">${esc(p.title)}</h3>
+            ${p.ccp ? `<div class="ccp">⚠️ ${esc(p.ccp)}</div>` : ''}
+            <div class="tasks">
+              ${p.tasks.map(t => {
+                const checked = Boolean(state.completedTasks[t.id]);
+                return `
+                  <label class="task ${checked ? 'is-checked' : ''}">
+                    <input type="checkbox" data-task-id="${t.id}" ${checked ? 'checked' : ''} />
+                    <span class="task-text">${esc(t.text)}</span>
+                  </label>
+                `;
+              }).join('')}
+            </div>
+            ${p.hasTimer ? renderTimerMarkup() : ''}
+          </article>
+        `;
+      }).join('');
+
+      if (preserveFocusId) {
+        const el = container.querySelector(`input[data-task-id="${preserveFocusId}"]`);
+        if (el) el.focus({ preventScroll: true });
+      }
+      updateActiveTimerBar();
+    }
+
+    function renderAll() {
+      const q = RECIPE.scales[state.volume];
+      document.getElementById('metric-volume').textContent = `${state.volume} ml`;
+      document.getElementById('metric-yield').textContent = q.yield;
+
+      const sugarBadge = state.sugarMode === 'less'
+        ? '<span class="badge badge-ok">Less Sugar</span>'
+        : '<span class="badge badge-sky">0% No Sugar</span>';
+      document.getElementById('recipe-badges').innerHTML = `
+        <span class="badge badge-code">SOP-YGT-${state.volume}</span>
+        <span class="badge badge-amber">Tanpa Susu Bubuk</span>
+        ${sugarBadge}
+      `;
+
+      document.querySelectorAll('.vol-btn').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.vol) === state.volume)));
+      document.querySelectorAll('.thermo-btn').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.thermo === 'true') === state.hasThermometer)));
+      document.querySelectorAll('.sugar-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sugar === state.sugarMode)));
+      document.getElementById('toggle-lime').checked = state.useLime;
+
+      document.getElementById('ingredients-grid').innerHTML = RECIPE.ingredients(q, state).map(i => `
+        <div class="ing-item">
+          <div class="ing-head">
+            <span class="ing-name">${esc(i.name)}</span>
+            <span class="ing-qty">${esc(i.qty)}</span>
+          </div>
+          <span class="ing-note">${esc(i.note)}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('qc-body').innerHTML = RECIPE.qc.map(r => `
+        <tr><td>${esc(r.param)}</td><td>${esc(r.pass)}</td><td>${esc(r.fail)}</td></tr>
+      `).join('');
+
+      renderPhases();
+    }
+
+    function downloadCalendarAlarm() {
+      if (!state.incubationStart) return;
+      const start = new Date(state.incubationStart);
+      const t12 = new Date(start.getTime() + 12 * 3600000);
+      const end = new Date(t12.getTime() + 15 * 60000);
+      const utc = d => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+      // Two VALARMs in one event: 2h prior (=10h mild) and 5m prior (=12h thick)
+      const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//DapurSOP//YogurtTimer//ID',
+        'BEGIN:VEVENT',
+        `UID:dapursop-${start.getTime()}@local`,
+        `DTSTAMP:${utc(new Date())}`,
+        `DTSTART:${utc(t12)}`,
+        `DTEND:${utc(end)}`,
+        `SUMMARY:Angkat Yogurt ${state.volume}ml! (Fermentasi 12 Jam)`,
+        `DESCRIPTION:Fermentasi ${RECIPE.title} (${state.volume} ml) selesai. Saring di kulkas 2-4 jam.`,
+        'BEGIN:VALARM',
+        'TRIGGER:-PT2H',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:Yogurt sudah 10 jam (bisa diangkat untuk rasa mild)',
+        'END:VALARM',
+        'BEGIN:VALARM',
+        'TRIGGER:-PT5M',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:Yogurt hampir 12 jam — siap disaring di kulkas!',
+        'END:VALARM',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Alarm-Yogurt-${state.volume}ml.ics`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Delay revoke so iOS Safari / mobile browsers finish consuming the blob
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function copyTimerSummary() {
+      if (!state.incubationStart) return;
+      const start = new Date(state.incubationStart);
+      const t10 = new Date(start.getTime() + 10 * 3600000);
+      const t12 = new Date(start.getTime() + 12 * 3600000);
+      const text = `Yogurt ${state.volume}ml mulai ${formatLocalTime(start)} -> Angkat ${formatLocalTime(t10)} (mild) s/d ${formatLocalTime(t12)} (padat).`;
+
+      const done = () => {
+        const btn = document.getElementById('btn-copy-timer');
+        if (!btn) return;
+        btn.textContent = 'Tersalin!';
+        setTimeout(() => { if (document.getElementById('btn-copy-timer')) btn.textContent = 'Salin Jam'; }, 1500);
+      };
+
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => { fallbackCopy(text); done(); });
+      } else {
+        fallbackCopy(text);
+        done();
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.readOnly = true;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } finally { ta.remove(); }
+    }
+
+    // Event bindings (delegated where dynamic)
+    document.addEventListener('DOMContentLoaded', () => {
+      state = loadState();
+      renderAll();
+
+      setInterval(updateActiveTimerBar, 60000);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) updateActiveTimerBar();
+      });
+
+      document.querySelectorAll('.vol-btn').forEach(b => b.addEventListener('click', () => {
+        state.volume = Number(b.dataset.vol);
+        saveState();
+        renderAll();
+      }));
+
+      document.querySelectorAll('.thermo-btn').forEach(b => b.addEventListener('click', () => {
+        state.hasThermometer = b.dataset.thermo === 'true';
+        saveState();
+        renderAll();
+      }));
+
+      document.querySelectorAll('.sugar-btn').forEach(b => b.addEventListener('click', () => {
+        state.sugarMode = b.dataset.sugar;
+        saveState();
+        renderAll();
+      }));
+
+      document.getElementById('toggle-lime').addEventListener('change', e => {
+        state.useLime = e.target.checked;
+        saveState();
+        renderAll();
+      });
+
+      document.getElementById('btn-jump-timer').addEventListener('click', () => {
+        document.getElementById('p4')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      const sop = document.getElementById('sop-phases');
+      sop.addEventListener('change', e => {
+        const id = e.target.dataset?.taskId;
+        if (!id) return;
+        if (e.target.checked) state.completedTasks[id] = true;
+        else delete state.completedTasks[id];
+        saveState();
+        renderPhases(id);
+      });
+
+      sop.addEventListener('click', e => {
+        const action = e.target.closest('[data-action]')?.dataset.action;
+        if (!action) return;
+        if (action === 'start-timer') {
+          state.incubationStart = new Date().toISOString();
+          saveState();
+          renderPhases();
+        } else if (action === 'clear-timer') {
+          state.incubationStart = null;
+          saveState();
+          renderPhases();
+        } else if (action === 'download-ics') {
+          downloadCalendarAlarm();
+        } else if (action === 'copy-timer') {
+          copyTimerSummary();
+        }
+      });
+
+      const dialog = document.getElementById('reset-dialog');
+      document.getElementById('btn-open-reset').addEventListener('click', () => dialog.showModal());
+      document.getElementById('btn-cancel-reset').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+      document.getElementById('btn-confirm-reset').addEventListener('click', () => {
+        state.completedTasks = {};
+        state.incubationStart = null;
+        saveState();
+        renderAll();
+        dialog.close();
+      });
+    });
+  </script>
+</body>
+</html>
